@@ -4,6 +4,10 @@
 set -euo pipefail \
     ${DEBUG:+-x}
 
+_reversed() {
+  sed '1!G;h;$!d'
+}
+
 @match() {
   printf '%s\n' "${1:?str}" \
     | grep -q "${@:2}" || return $?
@@ -15,7 +19,7 @@ _url_sp() {
 }
 
 _response_meta() {
-  printf '%s\n' "${2-$__drcom_response}" | tac | awk "
+  printf '%s\n' "${2-$__drcom_response}" | _reversed | awk "
     /^=>response_body$/ { exit };
 
     /^${1:?key}=/ {
@@ -32,7 +36,7 @@ _response_meta() {
           else m = 1;
       }
     }
-  " | tac
+  " | _reversed
 }
 
 _request() {
@@ -52,7 +56,7 @@ json=%{json}
 -- "$origin_url" || true)
 
   response_body=$(printf '%s\n' "$__drcom_response" \
-    | tac | sed -n '/^=>response_body$/,$p' | sed '1d' | tac)
+    | _reversed | sed -n '/^=>response_body$/,$p' | sed '1d' | _reversed)
 
   redirect_method='UNSET'
   redirect_url='UNSET'
@@ -89,7 +93,7 @@ _predict_captive_portal() {
   done
 }
 
-: "${DRCOM_PORTALS_FOLDER:=$(realpath -mL "$0/../portals")}"
+: "${DRCOM_PORTALS_FOLDER:=$(dirname "$0")/portals}"
 : "${DRCOM_TEST_ENDPOINT:=1.1.1.1}"
 
 # shellcheck disable=SC1090

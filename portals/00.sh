@@ -3,8 +3,9 @@
 case "$1" in
   "predict")
     @match "$http_code" 204 || (
-      @match "$origin_url" -P '^(http://|(?!.*://))' &&
-      @match "$redirect_url" "^https://${origin_url#http://}" &&
+      origin_url="${origin_url#http://}"
+      @match "$origin_url" '^\w+://' -v &&
+      @match "$redirect_url" "^https://$origin_url" &&
       @match "$redirect_method" -i 'http_redirect_url' &&
       true  # just keep in the same style
     )
