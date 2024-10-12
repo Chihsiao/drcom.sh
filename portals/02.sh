@@ -3,6 +3,7 @@
 case "$1" in
   "predict")
     @match "$(_response_header server)" -F 'DrcomServer1.0' &&
+    @match "$redirect_url" -E '^http://172\.16\.200\.11/?' &&
     true  # just keep in the same style
   ;;
   "login")
