@@ -2,8 +2,7 @@
 
 case "$1" in
   "predict")
-    printf '%s\n' "$http_headers" | jq -e > /dev/null \
-        '.server[0] == "DrcomServer1.0"' &&
+    @match "$(_response_header server)" -F 'DrcomServer1.0' &&
     true  # just keep in the same style
   ;;
   "login")

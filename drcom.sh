@@ -18,6 +18,19 @@ _url_sp() {
     | sed -E "s|.*[\?&]${1:?search param}\s*=\s*([^&]+)\b.*|\1|"
 }
 
+_response_header() {
+  printf '%s\n' "${2-$__drcom_response_header}" \
+    | awk -v key="${1:?key}" -F': ' -- '
+      {
+        if (tolower($1) == key) {
+          sub(/^[^ ]+: /, "");
+          sub(/\r$/, "");
+          print $0;
+        }
+      }
+    '
+}
+
 _response_meta() {
   printf '%s\n' "${2-$__drcom_response}" | _reversed | awk "
     /^=>response_body$/ { exit };
@@ -47,15 +60,19 @@ _request() {
 _detect_redirect() {
   origin_url="${1:-1.1.1.1}"
 
-  __drcom_response=$(_request -w '\n=>response_body
-http_headers<=\n%{header_json}\n=>http_headers
+  local __drcom_response_splitter
+  __drcom_response=$(_request -D- -w '\n=>response_body
 http_redirect_url=%{redirect_url}
 http_code=%{http_code}
 json=%{json}
 ' \
 -- "$origin_url" || true)
 
-  response_body=$(printf '%s\n' "$__drcom_response" \
+  __drcom_response_splitter=$(printf '%s\n' "$__drcom_response" | awk '/^\r$/ { print NR; exit; }')
+  __drcom_response_header=$(printf '%s\n' "$__drcom_response" | head -n $((__drcom_response_splitter - 1)) | tail -n+2)
+  mapfile -t response_header_keys < <(printf '%s\n' "$__drcom_response_header" | awk -F': ' '{ print tolower($1) }' | sort -u)
+
+  response_body=$(printf '%s\n' "$__drcom_response" | tail -n+$((__drcom_response_splitter + 1)) \
     | _reversed | sed -n '/^=>response_body$/,$p' | sed '1d' | _reversed)
 
   redirect_method='UNSET'
@@ -68,7 +85,6 @@ json=%{json}
   )
 
   http_code=$(_response_meta http_code)
-  http_headers=$(_response_meta http_headers)
   http_redirect_url=$(_response_meta http_redirect_url)
 
   html_meta_refresh_url=$(printf '%s\n' "$response_body" \
