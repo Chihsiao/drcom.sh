@@ -15,7 +15,6 @@ drcom.sh is for handling status checks and login for captive portals.
 - **bash**: Used to execute the script.
 - **curl**: Used to make network requests and handle responses.
 - **grep、sed、awk**: Used to filter, transform, and extract specific information.
-- **jq**: Used to parse and format JSON data, such as HTTP response headers.
 
 ## Installation
 
