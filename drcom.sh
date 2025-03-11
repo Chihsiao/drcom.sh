@@ -92,7 +92,7 @@ json=%{json}
     | (sed -nE -e "s@.*?\bcontent=('(.*?)'|\"(.*?)\").*@\2\3@g" -e 's|^\s*[0-9]+\s*;\s*url=(.*)|\1|g;p'))
 
   html_script_location_href=$(printf '%s\n' "$response_body" \
-    | (sed -nE " /.*\blocation\.href\s*=/ { s@.*\blocation\.href\s*=\s*('(.*?)'|\"(.*?)\").*@\2\3@; p; q }"))
+    | (sed -nE " /.*\blocation\.href\s*=/ { s@.*\blocation\.href\s*=\s*('([^']*?)'|\"([^\"]*?)\").*@\2\3@; p; q }"))
 
   local UNKNOWN=
   for redirect_method in "${url_srcs[@]}" UNKNOWN; do
